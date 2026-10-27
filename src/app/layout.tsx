@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
 
+
 const display = Cormorant_Garamond({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 const sans = Montserrat({
