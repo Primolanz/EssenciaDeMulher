@@ -14,10 +14,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const customerName = String(body.customerName ?? "").trim();
-    const customerPhone = String(body.customerPhone ?? "").trim();
+    const customerPhone = String(body.customerPhone ?? "").replace(/\D/g, "");
     const dueDate = new Date(body.dueDate);
     const items = Array.isArray(body.items) ? body.items as { variantId: string; quantity: number }[] : [];
-    if (!customerName || !customerPhone || !Number.isFinite(dueDate.getTime()) || !items.length) {
+    if (!customerName || customerPhone.length < 10 || customerPhone.length > 11 || !Number.isFinite(dueDate.getTime()) || dueDate < new Date(new Date().setHours(0, 0, 0, 0)) || !items.length) {
       return NextResponse.json({ error: "Informe cliente, WhatsApp, retorno e ao menos uma peça." }, { status: 400 });
     }
     if (items.some((item) => !item.variantId || !Number.isInteger(Number(item.quantity)) || Number(item.quantity) < 1)) {
