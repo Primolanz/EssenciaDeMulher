@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, LogOut, Menu, Package, Tags, X } from "lucide-react";
+import { ArrowUpRight, Home, LogOut, Menu, Package, Tags, X } from "lucide-react";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,6 +21,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const links = [
     { href: "/admin/products", label: "Produtos", icon: Package },
     { href: "/admin/categories", label: "Categorias", icon: Tags },
+    { href: "/admin/conditionals", label: "Prova em Casa", icon: Home },
   ];
 
   return (

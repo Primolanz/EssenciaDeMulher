@@ -38,12 +38,13 @@ model Product {
 }
 
 model ProductVariant {
-  id        String  @id @default(uuid()) @db.Uuid
-  productId String  @db.Uuid
-  size      String
-  color     String
-  stock     Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id               String            @id @default(uuid()) @db.Uuid
+  productId        String            @db.Uuid
+  size             String
+  color            String
+  stock            Int
+  product          Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  conditionalItems ConditionalItem[]
 }
 
 model ProductImage {
@@ -53,4 +54,39 @@ model ProductImage {
   productId String  @db.Uuid
   isMain    Boolean @default(false)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+enum ConditionalStatus {
+  IN_TRIAL   // Em prova na casa da cliente (estoque reservado)
+  COMPLETED  // Finalizado (peças devolvidas ou compradas)
+  CANCELED   // Cancelado (estoque devolvido)
+}
+
+enum ConditionalItemOutcome {
+  PENDING    // Ainda em prova
+  RETURNED   // Devolvida para a loja (volta ao estoque)
+  PURCHASED  // Comprada pela cliente (baixa definitiva)
+}
+
+model Conditional {
+  id            String            @id @default(uuid()) @db.Uuid
+  customerName  String
+  customerPhone String
+  address       String?
+  notes         String?           @db.Text
+  status        ConditionalStatus @default(IN_TRIAL)
+  sentAt        DateTime          @default(now())
+  dueDate       DateTime
+  closedAt      DateTime?
+  items         ConditionalItem[]
+}
+
+model ConditionalItem {
+  id            String                 @id @default(uuid()) @db.Uuid
+  conditionalId String                 @db.Uuid
+  variantId     String                 @db.Uuid
+  quantity      Int                    @default(1)
+  outcome       ConditionalItemOutcome @default(PENDING)
+  conditional   Conditional            @relation(fields: [conditionalId], references: [id], onDelete: Cascade)
+  variant       ProductVariant         @relation(fields: [variantId], references: [id])
 }

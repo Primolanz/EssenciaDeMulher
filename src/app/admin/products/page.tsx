@@ -15,6 +15,7 @@ type ImageDraft = SavedImage & { file?: File; preview: string };
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const blankForm = { name: "", description: "", price: "", categoryId: "", active: true, featured: false };
+const sizeGroups = { Letras: ["PP", "P", "M", "G", "GG", "XG", "XGG", "G1", "G2", "G3", "G4"], Numeração: ["34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54"], Especial: ["Único"] };
 const toTitleCase = (value: string) => value.toLocaleLowerCase("pt-BR").replace(/(^|[\s-])(\p{L})/gu, (_, separator: string, letter: string) => `${separator}${letter.toLocaleUpperCase("pt-BR")}`);
 
 export default function AdminProductsPage() {
@@ -103,9 +104,7 @@ export default function AdminProductsPage() {
   function updateVariant(index: number, field: keyof Variant, value: string) {
     const sanitizedValue = field === "stock"
       ? Number(value)
-      : field === "size"
-        ? value.slice(0, 4).toLocaleUpperCase("pt-BR")
-        : toTitleCase(value.slice(0, 20));
+      : field === "size" ? value : toTitleCase(value.slice(0, 20));
     setVariants((current) => current.map((variant, variantIndex) => variantIndex === index ? { ...variant, [field]: sanitizedValue } : variant));
   }
 
@@ -155,7 +154,7 @@ export default function AdminProductsPage() {
         name: toTitleCase(form.name).slice(0, 60),
         description: form.description.slice(0, 500),
         price: Number(form.price.replace(",", ".")),
-        variants: variants.map(({ size, color, stock }) => ({ size: size.trim().slice(0, 4).toLocaleUpperCase("pt-BR"), color: toTitleCase(color.trim().slice(0, 20)), stock: Number(stock) })),
+        variants: variants.map(({ size, color, stock }) => ({ size: size.trim(), color: toTitleCase(color.trim().slice(0, 20)), stock: Number(stock) })),
         images: savedImages,
       };
       const response = await fetch(editing ? `/api/products/${editing.id}` : "/api/products", {
@@ -234,7 +233,7 @@ export default function AdminProductsPage() {
 
             <div><div className="mb-3 flex items-center justify-between"><div><h3 className="font-display text-xl">Tamanhos e cores</h3><p className="mt-1 text-xs text-[#81756D]">Controle o estoque de cada combinação.</p></div><button type="button" onClick={() => setVariants((current) => [...current, { size: "", color: "", stock: 0 }])} className="inline-flex items-center gap-1.5 rounded-full border border-[#E9DED6] px-3 py-2 text-xs font-semibold text-[#765033]"><Plus size={14} /> Variante</button></div>
               <p className="mb-3 rounded-lg bg-[#FAF7F4] px-3 py-2.5 text-xs leading-5 text-[#81756D]">Cada linha representa uma combinação de tamanho e cor. Informe no estoque quantas unidades dessa variante estão disponíveis.</p>
-              <div className="space-y-3">{variants.map((variant, index) => <div key={index} className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_1fr_100px_40px]"><label><span className="admin-label">Tamanho</span><input className="admin-field h-10 text-sm" placeholder="P, M, G, 38, 40" maxLength={4} value={variant.size} onChange={(event) => updateVariant(index, "size", event.target.value)} /></label><label><span className="admin-label">Cor</span><input className="admin-field h-10 text-sm" placeholder="Terracota, Areia, Preto" maxLength={20} value={variant.color} onChange={(event) => updateVariant(index, "color", event.target.value)} /></label><label><span className="admin-label">Estoque</span><input className="admin-field h-10 text-sm" type="number" min="0" step="1" placeholder="0" value={variant.stock} onChange={(event) => updateVariant(index, "stock", event.target.value)} /></label><button type="button" aria-label="Remover variante" onClick={() => setVariants((current) => current.filter((_, variantIndex) => variantIndex !== index))} className="mb-0.5 flex h-10 items-center justify-center rounded-lg text-[#A1948B] hover:bg-[#FBF0ED] hover:text-[#9B493D]"><X size={17} /></button></div>)}</div>
+              <div className="space-y-3">{variants.map((variant, index) => <div key={index} className="grid grid-cols-2 items-end gap-2 rounded-lg border border-[#F0E8E2] p-3 sm:grid-cols-[1fr_1fr_100px_40px]"><div className="col-span-2 sm:col-span-1"><span className="admin-label">Tamanho</span>{Object.entries(sizeGroups).map(([group, sizes]) => <div key={group} className="mt-2"><span className="mb-1 block text-[9px] font-semibold uppercase tracking-wider text-[#9A8B80]">{group}</span><div className="flex flex-wrap gap-1">{sizes.map((size) => <button type="button" key={size} onClick={() => updateVariant(index, "size", size)} className={`rounded-md border px-2 py-1 text-[10px] ${variant.size === size ? "border-[#8B5E3C] bg-[#8B5E3C] text-white" : "border-[#E9DED6] text-[#70655E] hover:border-[#A37B5C]"}`}>{size}</button>)}</div></div>)}{variant.size && !Object.values(sizeGroups).flat().includes(variant.size) && <p className="mt-1 text-[10px] text-[#8B5E3C]">Tamanho existente: {variant.size}</p>}</div><label><span className="admin-label">Cor</span><input className="admin-field h-10 text-sm" placeholder="Terracota, Areia, Preto" maxLength={20} value={variant.color} onChange={(event) => updateVariant(index, "color", event.target.value)} /></label><label><span className="admin-label">Estoque</span><input className="admin-field h-10 text-sm" type="number" min="0" step="1" placeholder="0" value={variant.stock} onChange={(event) => updateVariant(index, "stock", event.target.value)} /></label><button type="button" aria-label="Remover variante" onClick={() => setVariants((current) => current.filter((_, variantIndex) => variantIndex !== index))} className="mb-0.5 flex h-10 items-center justify-center rounded-lg text-[#A1948B] hover:bg-[#FBF0ED] hover:text-[#9B493D]"><X size={17} /></button></div>)}</div>
             </div>
 
             <div className="flex flex-col gap-3 rounded-xl bg-[#FAF7F4] p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">Visibilidade e destaque</p><p className="mt-1 text-xs text-[#81756D]">Defina como o produto aparece no catálogo.</p></div><div className="flex gap-5"><label className="flex items-center gap-2 text-xs font-medium"><input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} className="accent-[#8B5E3C]" /> Ativo</label><label className="flex items-center gap-2 text-xs font-medium"><input type="checkbox" checked={form.featured} onChange={(event) => setForm({ ...form, featured: event.target.checked })} className="accent-[#8B5E3C]" /> Destaque</label></div></div>
